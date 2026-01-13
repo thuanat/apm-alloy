@@ -6,8 +6,8 @@ const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-htt
 // --- THÊM PHẦN LOGS ---
 const { LoggerProvider, SimpleLogRecordProcessor } = require('@opentelemetry/sdk-logs');
 const { OTLPLogExporter } = require('@opentelemetry/exporter-logs-otlp-http');
-const { WinstonTransport } = require('@opentelemetry/winston-transport');
-
+const OTelWinston = require('@opentelemetry/winston-transport');
+const WinstonTransport = OTelWinston.WinstonTransport;
 const express = require('express');
 const winston = require('winston');
 
