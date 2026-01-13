@@ -16,7 +16,13 @@ services:
     container_name: alloy
     volumes:
       - ./config.alloy:/etc/alloy/config.alloy
-    command: run --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    command: [
+      "run",
+      "--reload-interval=1m",
+      "--storage.path=/var/lib/alloy/data",
+      "--advertise-addr=0.0.0.0:12345", 
+      "/etc/alloy/config.alloy"
+    ]
     ports:
       - "12345:12345" # Alloy UI
       - "4317:4317"   # OTLP gRPC receiver
