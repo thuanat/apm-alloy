@@ -1,0 +1,15 @@
+target: all
+multitenancy_enabled: false
+
+common:
+  storage:
+    backend: local
+    local:
+      directory: /tmp/mimir
+
+blocks_storage:
+  backend: local
+  local:
+    directory: /tmp/mimir/blocks
+  tsdb:
+    dir: /tmp/mimir/tsdb

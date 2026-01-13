@@ -1,0 +1,14 @@
+{
+  "name": "otel-demo-app",
+  "version": "1.0.0",
+  "main": "app.js",
+  "dependencies": {
+    "winston": "^3.11.0",
+    "@opentelemetry/api": "^1.7.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.41.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.46.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.46.0",
+    "@opentelemetry/sdk-node": "^0.46.0",
+    "express": "^4.18.2"
+  }
+}

@@ -1,0 +1,59 @@
+// --- 1. METRICS: Thu thập metrics của chính Alloy ---
+prometheus.scrape "alloy_metrics" {
+  // 0.0.0.0 giúp Alloy tự scrape chính nó trong mạng Docker
+  targets = [{"__address__" = "0.0.0.0:12345"}]
+  forward_to = [prometheus.remote_write.mimir_backend.receiver]
+}
+
+// --- 2. RECEIVER: Cổng tiếp nhận từ App-Demo ---
+otelcol.receiver.otlp "default" {
+  grpc { endpoint = "0.0.0.0:4317" }
+  http { endpoint = "0.0.0.0:4318" }
+
+  output {
+    metrics = [otelcol.exporter.prometheus.to_mimir.input]
+    traces  = [otelcol.exporter.otlp.to_tempo.input]
+    logs    = [otelcol.processor.attributes.add_label.input]
+  }
+}
+
+// --- 3. PROCESSOR: Thêm Label cho Log (Bắt buộc cho Loki) ---
+otelcol.processor.attributes "add_label" {
+  action {
+    key   = "service_name"
+    value = "app-demo"
+    action = "insert"
+  }
+
+  output {
+    logs = [otelcol.exporter.loki.to_loki.input]
+  }
+}
+
+// --- 4. EXPORTERS: Đẩy dữ liệu ra các Backend ---
+
+// Đẩy sang Mimir
+prometheus.remote_write "mimir_backend" {
+  endpoint {
+    url = "http://mimir:9009/api/v1/push"
+  }
+}
+
+// Đẩy sang Tempo
+otelcol.exporter.otlp "to_tempo" {
+  client {
+    endpoint = "tempo:4317"
+    tls { insecure = true }
+  }
+}
+
+// Đẩy sang Loki
+otelcol.exporter.loki "to_loki" {
+  forward_to = [loki.write.loki_backend.receiver]
+}
+
+loki.write "loki_backend" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
