@@ -4,29 +4,33 @@ multitenancy_enabled: false
 server:
   http_listen_port: 9009
 
+# Cấu hình lưu trữ chung
 common:
   storage:
     backend: filesystem
     filesystem:
       dir: /tmp/mimir/data
-  replication_factor: 1
 
-# Cấu hình quan trọng để Mimir "thấy" chính nó
+# ĐÂY LÀ NƠI ĐẶT replication_factor ĐÚNG CHUẨN
 ingester:
   ring:
     instance_addr: 127.0.0.1
     kvstore:
-      store: inmemory # Lưu danh sách node ngay trong RAM
+      store: inmemory
+    replication_factor: 1
 
-# Ép các thành phần khác cũng nhìn vào Ring nội bộ này
+# Các thành phần khác cần đồng bộ để không tìm Ring bên ngoài
 distributor:
   ring:
     kvstore:
       store: inmemory
 
-ingester_client:
-  expected_ring_tokens_per_ingester: 0
+ruler:
+  ring:
+    kvstore:
+      store: inmemory
 
+# Tách biệt folder để tránh lỗi overlap đã gặp trước đó
 blocks_storage:
   backend: filesystem
   filesystem:
