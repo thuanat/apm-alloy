@@ -1,5 +1,6 @@
 const { NodeSDK } = require('@opentelemetry/sdk-node');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
+const { WinstonInstrumentation } = require('@opentelemetry/instrumentation-winston');
 
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
 const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-http');
@@ -7,12 +8,6 @@ const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-htt
 const { LoggerProvider, SimpleLogRecordProcessor } = require('@opentelemetry/sdk-logs');
 const { OTLPLogExporter } = require('@opentelemetry/exporter-logs-otlp-http');
 const { logs } = require('@opentelemetry/api-logs');
-
-/* ===== FIX DUY NHẤT Ở ĐÂY ===== */
-const WinstonTransport =
-  require('@opentelemetry/winston-transport').WinstonTransport ??
-  require('@opentelemetry/winston-transport').default ??
-  require('@opentelemetry/winston-transport');
 
 const express = require('express');
 const winston = require('winston');
@@ -33,18 +28,19 @@ logs.setGlobalLoggerProvider(loggerProvider);
 
 /* =======================
  * 2. Winston Logger
+ * (KHÔNG gắn OTel transport)
  * ======================= */
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.json(),
   transports: [
-    new winston.transports.Console(),
-    new WinstonTransport({ loggerProvider }),
+    new winston.transports.Console(), // stdout → OTel hook
   ],
 });
 
 /* =======================
  * 3. Traces & Metrics SDK
+ * + Winston Instrumentation
  * ======================= */
 const sdk = new NodeSDK({
   traceExporter: new OTLPTraceExporter({
@@ -53,7 +49,10 @@ const sdk = new NodeSDK({
   metricExporter: new OTLPMetricExporter({
     url: 'http://alloy:4318/v1/metrics',
   }),
-  instrumentations: [getNodeAutoInstrumentations()],
+  instrumentations: [
+    getNodeAutoInstrumentations(),
+    new WinstonInstrumentation(), // ✅ QUAN TRỌNG
+  ],
 });
 
 sdk.start();
