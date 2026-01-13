@@ -18,7 +18,6 @@ services:
       - ./config.alloy:/etc/alloy/config.alloy
     command: [
       "run",
-      "--reload-interval=1m",
       "--storage.path=/var/lib/alloy/data",
       "--advertise-addr=0.0.0.0:12345", 
       "/etc/alloy/config.alloy"
