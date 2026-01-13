@@ -4,12 +4,28 @@ multitenancy_enabled: false
 server:
   http_listen_port: 9009
 
-# Cấu hình lưu trữ tách biệt các thư mục để tránh lỗi overlap
 common:
   storage:
     backend: filesystem
     filesystem:
       dir: /tmp/mimir/data
+  replication_factor: 1
+
+# Cấu hình quan trọng để Mimir "thấy" chính nó
+ingester:
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory # Lưu danh sách node ngay trong RAM
+
+# Ép các thành phần khác cũng nhìn vào Ring nội bộ này
+distributor:
+  ring:
+    kvstore:
+      store: inmemory
+
+ingester_client:
+  expected_ring_tokens_per_ingester: 0
 
 blocks_storage:
   backend: filesystem
