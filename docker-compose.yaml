@@ -10,6 +10,8 @@ services:
     environment:
       - NODE_ENV=production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318
+    networks:
+      - monitoring
 
   # Grafana Alloy - Trái tim điều phối Telemetry
   alloy:
@@ -25,12 +27,14 @@ services:
     ]
     ports:
       - "12345:12345" # Alloy UI
-      - "4317:4317"   # OTLP gRPC receiver
-      - "4318:4318"   # OTLP HTTP receiver (App Node.js dùng cổng này)
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
     depends_on:
       - mimir
       - loki
       - tempo
+    networks:
+      - monitoring
 
   # Backend cho Metrics
   mimir:
@@ -41,6 +45,8 @@ services:
     command: -config.file=/etc/mimir/mimir.yaml
     ports:
       - "9009:9009"
+    networks:
+      - monitoring
 
   # Backend cho Logs
   loki:
@@ -51,6 +57,8 @@ services:
     command: -config.file=/etc/loki/loki.yaml
     ports:
       - "3100:3100"
+    networks:
+      - monitoring
 
   # Backend cho Traces
   tempo:
@@ -61,6 +69,8 @@ services:
     command: -config.file=/etc/tempo/tempo.yaml
     ports:
       - "3200:3200"
+    networks:
+      - monitoring
 
   # Giao diện hiển thị
   grafana:
@@ -75,3 +85,10 @@ services:
       - mimir
       - loki
       - tempo
+    networks:
+      - monitoring
+
+# ĐỊNH NGHĨA NETWORK CHUNG
+networks:
+  monitoring:
+    driver: bridge
