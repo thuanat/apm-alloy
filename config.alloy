@@ -1,6 +1,5 @@
 // --- 1. METRICS: Thu thập metrics của chính Alloy ---
 prometheus.scrape "alloy_metrics" {
-  // 0.0.0.0 giúp Alloy tự scrape chính nó trong mạng Docker
   targets = [{"__address__" = "0.0.0.0:12345"}]
   forward_to = [prometheus.remote_write.mimir_backend.receiver]
 }
@@ -11,17 +10,20 @@ otelcol.receiver.otlp "default" {
   http { endpoint = "0.0.0.0:4318" }
 
   output {
+    // Dữ liệu Metrics đi qua bộ chuyển đổi to_mimir
     metrics = [otelcol.exporter.prometheus.to_mimir.input]
+    // Dữ liệu Traces đi thẳng tới exporter Tempo
     traces  = [otelcol.exporter.otlp.to_tempo.input]
+    // Dữ liệu Logs đi qua bộ xử lý gán nhãn
     logs    = [otelcol.processor.attributes.add_label.input]
   }
 }
 
-// --- 3. PROCESSOR: Thêm Label cho Log (Bắt buộc cho Loki) ---
+// --- 3. PROCESSOR: Gán nhãn cho Log (Bắt buộc để Loki hoạt động) ---
 otelcol.processor.attributes "add_label" {
   action {
-    key   = "service_name"
-    value = "app-demo"
+    key    = "service_name"
+    value  = "app-demo"
     action = "insert"
   }
 
@@ -30,16 +32,21 @@ otelcol.processor.attributes "add_label" {
   }
 }
 
-// --- 4. EXPORTERS: Đẩy dữ liệu ra các Backend ---
+// --- 4. EXPORTERS: Định nghĩa các đầu ra dữ liệu ---
 
-// Đẩy sang Mimir
+// BỘ CHUYỂN ĐỔI: Chuyển OTLP sang Prometheus (Phải có khối này!)
+otelcol.exporter.prometheus "to_mimir" {
+  forward_to = [prometheus.remote_write.mimir_backend.receiver]
+}
+
+// Gửi Metrics vào Mimir
 prometheus.remote_write "mimir_backend" {
   endpoint {
     url = "http://mimir:9009/api/v1/push"
   }
 }
 
-// Đẩy sang Tempo
+// Gửi Traces vào Tempo
 otelcol.exporter.otlp "to_tempo" {
   client {
     endpoint = "tempo:4317"
@@ -47,7 +54,7 @@ otelcol.exporter.otlp "to_tempo" {
   }
 }
 
-// Đẩy sang Loki
+// Gửi Logs vào Loki
 otelcol.exporter.loki "to_loki" {
   forward_to = [loki.write.loki_backend.receiver]
 }

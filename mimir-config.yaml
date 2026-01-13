@@ -6,10 +6,3 @@ common:
     backend: local
     local:
       directory: /tmp/mimir
-
-blocks_storage:
-  backend: local
-  local:
-    directory: /tmp/mimir/blocks
-  tsdb:
-    dir: /tmp/mimir/tsdb
