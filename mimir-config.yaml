@@ -1,8 +1,11 @@
 target: all
 multitenancy_enabled: false
 
+server:
+  http_listen_port: 9009
+
 common:
   storage:
-    backend: local
-    local:
-      directory: /tmp/mimir
+    backend: filesystem
+    filesystem:
+      dir: /tmp/mimir
