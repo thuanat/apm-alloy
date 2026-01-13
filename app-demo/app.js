@@ -8,7 +8,11 @@ const { LoggerProvider, SimpleLogRecordProcessor } = require('@opentelemetry/sdk
 const { OTLPLogExporter } = require('@opentelemetry/exporter-logs-otlp-http');
 const { logs } = require('@opentelemetry/api-logs');
 
-const { WinstonTransport } = require('@opentelemetry/winston-transport');
+/* ===== FIX DUY NHẤT Ở ĐÂY ===== */
+const WinstonTransport =
+  require('@opentelemetry/winston-transport').WinstonTransport ??
+  require('@opentelemetry/winston-transport').default ??
+  require('@opentelemetry/winston-transport');
 
 const express = require('express');
 const winston = require('winston');
@@ -25,7 +29,6 @@ loggerProvider.addLogRecordProcessor(
   new SimpleLogRecordProcessor(logExporter)
 );
 
-// QUAN TRỌNG: set global
 logs.setGlobalLoggerProvider(loggerProvider);
 
 /* =======================
@@ -36,9 +39,7 @@ const logger = winston.createLogger({
   format: winston.format.json(),
   transports: [
     new winston.transports.Console(),
-    new WinstonTransport({
-      loggerProvider,
-    }),
+    new WinstonTransport({ loggerProvider }),
   ],
 });
 
@@ -69,10 +70,7 @@ app.get('/', (req, res) => {
 
 app.get('/error', (req, res) => {
   const errorMsg = 'Lỗi nghiêm trọng: Không thể kết nối cơ sở dữ liệu!';
-  logger.error(errorMsg, {
-    path: '/error',
-    error_code: 500,
-  });
+  logger.error(errorMsg, { path: '/error', error_code: 500 });
   res.status(500).send(errorMsg);
 });
 
